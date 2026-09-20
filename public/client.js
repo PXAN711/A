@@ -401,7 +401,8 @@ function renderMy() {
   });
 }
 
-// ---------- 手牌交互：点击选中 / 向上拖拽出牌 / 悬停听牌明细 ----------
+// ---------- 手牌交互：点击选中 / 双击出牌 / 向上拖拽出牌 / 悬停听牌明细 ----------
+let lastTap = { t: 0, idx: -1 };       // 双击判定（模块级，DOM 重建不影响）
 function bindHandTile(el, real, di, tile, act, waits) {
   let sx = 0, sy = 0, moved = false, dragging = false;
   el.addEventListener('pointerdown', e => {
@@ -422,12 +423,22 @@ function bindHandTile(el, real, di, tile, act, waits) {
   const end = e => {
     el.classList.remove('pressing', 'dragging');
     el.style.transform = '';
-    if (dragging && act.mode === 'turn') dragDiscard(real, tile, act);
-    else if (!moved) clickHand(di);
+    if (dragging && act.mode === 'turn') return dragDiscard(real, tile, act);
+    if (!moved) {
+      // 自己回合：同一张牌 320ms 内点两次 = 双击打出
+      if (act.mode === 'turn') {
+        const now = performance.now();
+        if (lastTap.idx === real && now - lastTap.t < 320) {
+          lastTap = { t: 0, idx: -1 };
+          return dragDiscard(real, tile, act);
+        }
+        lastTap = { t: now, idx: real };
+      }
+      clickHand(di);
+    }
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', () => { el.classList.remove('pressing', 'dragging'); el.style.transform = ''; });
-  el.addEventListener('dblclick', () => { clickHand(di); if (act.mode === 'turn') doDiscard(); });
   if (waits && waits.length) {
     el.addEventListener('mouseenter', () => showTingTip(el, tile, waits));
     el.addEventListener('mouseleave', hideTingTip);
