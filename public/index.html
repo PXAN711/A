@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>换三张 · 局域网麻将</title>
+<link rel="stylesheet" href="style.css?v=13">
+</head>
+<body>
+<!-- 登录：输入 ID 即进，无需注册和密码 -->
+<div id="login" class="login">
+  <div class="login-box">
+    <h1>换三张</h1>
+    <p class="sub">四川血战 · 无需注册和密码，输入 ID 直接进入</p>
+    <input id="nameInput" maxlength="12" placeholder="输入你的 ID" autocomplete="off">
+    <button id="joinBtn">进入大厅</button>
+    <p class="hint">每人 50 豆 · 同机房朋友用同一地址打开即可一起玩</p>
+  </div>
+</div>
+
+<!-- 大厅：展示牌桌，自选座位 -->
+<div id="lobby" class="lobby hidden">
+  <div class="lobby-box">
+    <div class="lobby-bar">
+      <b id="lobbyStatus"></b>
+      <span class="spacer"></span>
+      <button class="btn green" id="lobbyFill">补满人機</button>
+    </div>
+    <div class="lobby-table">
+      <div class="lb-seat lb-pos-2" id="lbSeat2"></div>
+      <div class="lb-seat lb-pos-3" id="lbSeat3"></div>
+      <div class="lb-logo"><div class="lb-logo-t">换三张</div><div class="lb-logo-s">四川血战</div></div>
+      <div class="lb-seat lb-pos-1" id="lbSeat1"></div>
+      <div class="lb-seat lb-pos-0" id="lbSeat0"></div>
+    </div>
+    <div class="lobby-log" id="lobbyLog"></div>
+  </div>
+</div>
+
+<!-- 牌桌：四家正方形围坐 -->
+<div id="table" class="table hidden">
+  <div class="stage">
+    <div class="board">
+      <!-- 北：对家 -->
+      <div class="pos pos-north" id="seat-top"></div>
+      <!-- 西(左)：上家 -->
+      <div class="pos pos-west" id="seat-left"></div>
+      <!-- 中盘：东南西北 + 骰子 -->
+      <div class="center-plot">
+        <div class="compass">
+          <span class="dir d-n">北</span>
+          <span class="dir d-w">东</span>
+          <span class="dir d-e">西</span>
+          <span class="dir d-s">南·你</span>
+          <div class="core">
+            <div id="dice" class="dice">
+              <span class="die" id="die1"></span>
+              <span class="die" id="die2"></span>
+              <span class="dice-sum" id="diceSum"></span>
+            </div>
+            <div id="flyLayer" class="fly-layer"></div>
+            <div id="wall" class="wall"></div>
+            <div id="phaseTip" class="phase-tip"></div>
+            <div id="lastTile" class="last-tile"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 东(右)：下家 -->
+      <div class="pos pos-east" id="seat-right"></div>
+      <!-- 轮到谁：扇形追光指针（覆盖整张牌桌，方向由 --rot 控制） -->
+      <div class="turn-pointer" id="turnPointer"></div>
+      <!-- 南：自己 -->
+      <div class="pos pos-south">
+        <div class="my-discards" id="myDiscards"></div>
+        <div class="my-row">
+          <div class="my-side">
+            <div class="my-bar" id="myBar"></div>
+            <div class="my-melds" id="myMelds"></div>
+          </div>
+          <div class="hand" id="hand"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actions" id="actions"></div>
+  <!-- 右下角小聊天窗 -->
+  <div class="chat-box">
+    <div class="chat-head">牌桌聊天（点击展开/收起）</div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-input-row">
+      <input id="chatInput" maxlength="60" placeholder="说点什么，回车发送" autocomplete="off">
+      <button id="chatSend">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- 手牌悬停听牌明细浮层 -->
+<div id="tingTip" class="ting-tip hidden"></div>
+<!-- 碰/杠/胡 弹窗 -->
+<div id="askModal" class="ask-modal hidden"></div>
+<!-- 结算覆盖层 -->
+<div id="overlay" class="overlay hidden"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js?v=13"></script>
+</body>
+</html>

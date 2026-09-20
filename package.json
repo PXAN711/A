@@ -1,0 +1,18 @@
+{
+  "name": "mahjong-huansanzhang",
+  "version": "1.0.0",
+  "private": true,
+  "description": "局域网四人「换三张」麻将（四川血战到底 / 固定一桌 / 每人50豆）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:rule": "node game/test-rule.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

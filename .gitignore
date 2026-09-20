@@ -1,0 +1,9 @@
+# 依赖（朋友端启动时会自动 npm install）
+node_modules/
+
+# 便携 Node 运行时（83MB，缺失时启动脚本自动改用系统 Node）
+runtime/
+
+# 日志与本地备份
+*.log
+*.bak
