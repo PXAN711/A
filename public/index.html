@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>换三张 · 局域网麻将</title>
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <!-- 登录：输入 ID 即进，无需注册和密码 -->
@@ -18,12 +18,28 @@
   </div>
 </div>
 
-<!-- 大厅：展示牌桌，自选座位 -->
+<!-- 大厅：房间列表，可创建/加入 -->
+<div id="hall" class="hall hidden">
+  <div class="hall-box">
+    <h1>换三张 <span>牌桌大厅</span></h1>
+    <div class="hall-bar">
+      <b id="hallTitle">选择房间入座</b>
+      <span class="spacer"></span>
+      <button class="btn primary" id="createRoomBtn">创建房间</button>
+    </div>
+    <div class="room-list" id="roomList"></div>
+    <div class="hall-foot" id="hallName"></div>
+  </div>
+</div>
+
+<!-- 房间内：展示牌桌，自选座位 -->
 <div id="lobby" class="lobby hidden">
   <div class="lobby-box">
+    <div class="room-title">房间号 <b id="roomNo">----</b></div>
     <div class="lobby-bar">
       <b id="lobbyStatus"></b>
       <span class="spacer"></span>
+      <button class="btn ghost" id="hallBack">返回大厅</button>
       <button class="btn green" id="lobbyFill">补满人機</button>
     </div>
     <div class="lobby-table">
@@ -103,6 +119,6 @@
 <div id="toast" class="toast hidden"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="client.js?v=13"></script>
+<script src="client.js?v=15"></script>
 </body>
 </html>

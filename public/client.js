@@ -3,8 +3,9 @@
 const socket = io();
 const SUIT_CN = { m: '万', p: '筒', s: '条' };
 const ROW = { p: 0, s: 1, m: 2 };           // 素材行：筒0 条1 万2
-let S = null, L = null;
+let S = null, L = null, RL = [];
 let myName = '';
+let screen = 'login';   // login | hall | room | table
 const sel = new Set();
 let askDeny = {};
 let viewOrder = [];                          // 手牌显示顺序（真实索引），新摸牌置最右
@@ -71,7 +72,16 @@ function tjHTML(t) { const r = ROW[suit(t)], c = rank(t) - 1; return `<div class
 function bigTJHTML(t) { const r = ROW[suit(t)], c = rank(t) - 1; return `<div class="tj big y${r} c${c}"></div>`; }
 function tbHTML(n) { return Array.from({ length: n }, () => '<div class="tb sm"></div>').join(''); }
 
-// ---------- 登录（只输 ID，无注册无密码）→ 大厅选座 ----------
+// ---------- 界面切换 ----------
+function showScreen(sc) {
+  screen = sc;
+  $('login').classList.toggle('hidden', sc !== 'login');
+  $('hall').classList.toggle('hidden', sc !== 'hall');
+  $('lobby').classList.toggle('hidden', sc !== 'room');
+  $('table').classList.toggle('hidden', sc !== 'table');
+}
+
+// ---------- 登录（只输 ID，无注册无密码）→ 房间大厅 ----------
 function doJoin() {
   const name = $('nameInput').value.trim();
   if (!name) return toast('请先输入 ID');
@@ -82,14 +92,49 @@ $('joinBtn').onclick = doJoin;
 $('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
 socket.on('error_msg', msg => toast(msg));
 
-// ---------- 大厅：展示牌桌与四个座位，自选入座 ----------
+// ---------- 大厅：房间列表 ----------
+socket.on('rooms', list => {
+  RL = list || [];
+  if (screen === 'login' || screen === 'hall') {
+    showScreen('hall');
+    // 断线重开：自动回到刚才的房间（同名离线会自动回座）
+    const last = localStorage.getItem('hsz_room');
+    if (last && RL.some(r => r.id === last) && screen === 'hall') {
+      localStorage.removeItem('hsz_room');
+      socket.emit('joinRoom', { roomId: last });
+      return;
+    }
+  }
+  renderHall();
+});
+$('createRoomBtn').onclick = () => socket.emit('createRoom');
+$('hallBack').onclick = () => socket.emit('leaveRoom');
+function renderHall() {
+  $('hallName').textContent = myName ? '当前 ID：' + myName : '';
+  const box = $('roomList');
+  if (!RL.length) {
+    box.innerHTML = '<div class="room-empty">暂无房间，点右上角「创建房间」开一桌</div>';
+    return;
+  }
+  box.innerHTML = RL.map(r => `
+    <div class="room-card ${r.waiting ? '' : 'busy'}">
+      <div class="rc-no">${r.id}</div>
+      <div class="rc-info">
+        <div class="rc-state">${PHASE_CN[r.phase] || r.phase} · 第 ${r.round || 1} 局</div>
+        <div class="rc-seats">${'●'.repeat(r.n)}${'○'.repeat(4 - r.n)} ${r.n}/4 人${r.bots ? '（含人机 ' + r.bots + '）' : ''}</div>
+      </div>
+      <button class="btn ${r.waiting ? 'primary' : 'ghost'} rc-join" data-id="${r.id}">${r.waiting ? '加入' : '观战/回座'}</button>
+    </div>`).join('');
+  box.querySelectorAll('.rc-join').forEach(b => b.onclick = () => socket.emit('joinRoom', { roomId: b.dataset.id }));
+}
+
+// ---------- 房间内：展示牌桌与四个座位，自选入座 ----------
 const SEAT_LABEL = ['南座（下）', '西座（右）', '北座（上）', '东座（左）'];
 const PHASE_CN = { idle: '等待入座', settle: '上一局结算中', exchange: '换三张中', lack: '定缺中', playing: '对局进行中', void: '本局作废' };
-socket.on('lobby', st => {
+socket.on('room', st => {
   L = st;
-  $('login').classList.add('hidden');
-  $('table').classList.add('hidden');
-  $('lobby').classList.remove('hidden');
+  localStorage.setItem('hsz_room', st.roomId);
+  showScreen('room');
   renderLobby();
 });
 function esc(s) { return ('' + s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -97,6 +142,7 @@ function renderLobby() {
   if (!L) return;
   const waiting = L.phase === 'idle' || L.phase === 'settle';
   const n = L.players.filter(p => p).length;
+  $('roomNo').textContent = L.roomId;
   $('lobbyStatus').textContent = `${PHASE_CN[L.phase] || L.phase} · 已入座 ${n}/4`;
   $('lobbyFill').style.display = (waiting && n < 4) ? '' : 'none';
   for (let seat = 0; seat < 4; seat++) {
@@ -156,7 +202,7 @@ socket.on('chat', d => {
 // ---------- 主渲染 ----------
 socket.on('state', st => {
   S = st;
-  if (st.self) { $('login').classList.add('hidden'); $('lobby').classList.add('hidden'); $('table').classList.remove('hidden'); }
+  if (st.self) { localStorage.setItem('hsz_room', st.roomId); showScreen('table'); }
   EV = diff(st);
   render();
 });
